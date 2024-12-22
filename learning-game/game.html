@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لعبة تعلم القراءة</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            direction: rtl;
+            background-color: #f0f8ff;
+            padding: 0;
+            margin: 0;
+        }
+
+        h1 {
+            color: #4CAF50;
+            font-size: 36px;
+            margin-top: 20px;
+        }
+
+        .game-container {
+            padding: 20px;
+        }
+
+        .question {
+            font-size: 26px;
+            color: #333;
+            margin-top: 30px;
+        }
+
+        .letters {
+            margin-top: 40px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .letter-btn {
+            font-size: 32px;
+            padding: 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .letter-btn:hover {
+            background-color: #0056b3;
+            transform: scale(1.1);
+        }
+
+        .letter-btn:active {
+            transform: scale(0.9);
+        }
+
+        .result {
+            margin-top: 30px;
+            font-size: 20px;
+        }
+
+        .score {
+            font-size: 22px;
+            margin-top: 20px;
+            color: #333;
+        }
+
+        .face {
+            width: 120px;
+            height: 120px;
+            margin-top: 30px;
+            transition: transform 0.3s;
+        }
+
+        .face.shake {
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            50% { transform: translateX(10px); }
+            75% { transform: translateX(-10px); }
+            100% { transform: translateX(0); }
+        }
+
+        .button-container {
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>لعبة تعلم القراءة</h1>
+
+<div class="game-container">
+    <img id="face" class="face" src="happy-face.png" alt="Face">
+
+    <div class="question" id="question">اختيار الحرف الصحيح</div>
+
+    <div class="letters" id="letters">
+        <!-- سيتم إضافة الأزرار هنا بواسطة JavaScript -->
+    </div>
+
+    <div class="result" id="result"></div>
+    <div class="score" id="score">النقاط: 0</div>
+</div>
+
+<div class="button-container">
+    <button onclick="startGame()" class="letter-btn">ابدأ اللعبة</button>
+</div>
+
+<!-- إضافة ملفات الصوت -->
+<audio id="success-sound" src="success.mp3" preload="auto"></audio>
+<audio id="failure-sound" src="failure.mp3" preload="auto"></audio>
+
+<script>
+    // قائمة الحروف والكلمات
+    const letters = ["ا", "ب", "ت", "ث", "ج", "ح", "خ", "د", "ذ", "ر", "ز", "س", "ش", "ص", "ض", "ط", "ظ", "ع", "غ", "ف", "ق", "ك", "ل", "م", "ن", "ه", "و", "ي"];
+    const words = ["قطة", "تفاحة", "شجرة", "كتاب", "سيارة", "دراجة", "طائرة"];
+
+    let score = 0;
+    let correctLetter = "";
+    let currentWord = "";
+
+    // بدء اللعبة
+    function startGame() {
+        score = 0;
+        document.getElementById("score").textContent = `النقاط: ${score}`;
+        generateQuestion();  // بداية الأسئلة
+    }
+
+    // إنشاء سؤال جديد
+    function generateQuestion() {
+        // اختيار كلمة عشوائية من القائمة
+        currentWord = words[Math.floor(Math.random() * words.length)];
+
+        // اختيار حرف عشوائي من الكلمة
+        correctLetter = currentWord[Math.floor(Math.random() * currentWord.length)];
+
+        // عرض السؤال
+        document.getElementById("question").textContent = `ما الحرف الموجود في الكلمة: ${currentWord}`;
+
+        // إنشاء الأزرار الخاصة بالحروف
+        let options = [correctLetter];
+        while (options.length < 3) {
+            const randomLetter = letters[Math.floor(Math.random() * letters.length)];
+            // التأكد من عدم تكرار الحروف في الاختيارات
+            if (!options.includes(randomLetter) && !currentWord.includes(randomLetter)) {
+                options.push(randomLetter);
+            }
+        }
+
+        // خلط الخيارات
+        options = options.sort(() => Math.random() - 0.5);
+
+        // إضافة الأزرار إلى الصفحة
+        const lettersDiv = document.getElementById("letters");
+        lettersDiv.innerHTML = "";  // مسح الأزرار القديمة
+        options.forEach(option => {
+            const button = document.createElement("button");
+            button.className = "letter-btn";
+            button.textContent = option;
+            button.onclick = () => checkAnswer(option);
+            lettersDiv.appendChild(button);
+        });
+    }
+
+    // التحقق من الإجابة
+    function checkAnswer(selectedLetter) {
+        const face = document.getElementById("face");
+        const successSound = document.getElementById("success-sound");
+        const failureSound = document.getElementById("failure-sound");
+
+        if (selectedLetter === correctLetter) {
+            score++;
+            document.getElementById("result").textContent = "إجابة صحيحة!";
+            document.getElementById("result").style.color = "green";
+            face.src = "happy-face.png"; // وجه مبتسم
+            face.classList.remove("shake");
+            successSound.play();  // تشغيل الصوت عند الإجابة الصحيحة
+        } else {
+            document.getElementById("result").textContent = "إجابة خاطئة!";
+            document.getElementById("result").style.color = "red";
+            face.src = "sad-face.png"; // وجه حزين
+            face.classList.add("shake"); // إضافة اهتزاز للوجه
+            failureSound.play();  // تشغيل الصوت عند الإجابة الخاطئة
+        }
+
+        // تحديث النقاط
+        document.getElementById("score").textContent = `النقاط: ${score}`;
+
+        // إنشاء سؤال جديد بعد فترة قصيرة
+        setTimeout(generateQuestion, 1000);
+    }
+</script>
+
+</body>
+</html>
